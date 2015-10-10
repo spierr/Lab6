@@ -5,10 +5,14 @@
  */
 package servidor;
 
+import java.io.BufferedReader;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.security.GeneralSecurityException;
@@ -41,9 +45,9 @@ public class Servidor  {
          try {
             SSLServer server = new SSLServer();
             // Server needs some key material.  We'll use an OpenSSL/PKCS8 style key (possibly encrypted).
-            String certificateChain = "/path/to/this/server.crt";
-            String privateKey = "/path/to/this/server.key";
-            char[] password = "changeit".toCharArray();
+            String certificateChain = "/lib/server.crt";
+            String privateKey = "/lib/server.key";
+            char[] password = "clave".toCharArray();
             KeyMaterial km = new KeyMaterial( certificateChain, privateKey, password ); 
 
             server.setKeyMaterial( km );
@@ -58,7 +62,10 @@ public class Servidor  {
             // client certs, but if they do, we'll give them a socket at the very least).
             server.addTrustMaterial( TrustMaterial.TRUST_ALL );
             SSLServerSocket ss = (SSLServerSocket) server.createServerSocket( 7443 );
-            SSLSocket socket = (SSLSocket) ss.accept();
+            SSLSocket s = (SSLSocket) ss.accept();
+            PrintWriter writer= new PrintWriter(s.getOutputStream());
+            BufferedReader reader= new BufferedReader(new InputStreamReader(s.getInputStream()));
+            System.out.println(reader.readLine());
          } catch (Exception e) {
          }
  

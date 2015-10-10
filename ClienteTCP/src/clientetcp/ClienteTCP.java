@@ -22,6 +22,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -53,21 +54,11 @@ public class ClienteTCP {
     public static void main(String[] args) {
         
          try {
-            SSLClient client = new SSLClient();
-            // Let's trust usual "cacerts" that come with Java.  Plus, let's also trust a self-signed cert
-            // we know of.  We have some additional certs to trust inside a java keystore file.
-            client.addTrustMaterial( TrustMaterial.DEFAULT );
-            client.addTrustMaterial( new TrustMaterial( "/path/to/self-signed.pem" ) );
-            client.addTrustMaterial( new KeyMaterial( "/path/to/keystore.jks", "changeit".toCharArray() ) );
-
-            // To be different, let's allow for expired certificates (not recommended).
-            client.setCheckHostname( true );  // default setting is "true" for SSLClient
-            client.setCheckExpiry( false );   // default setting is "true" for SSLClient
-            client.setCheckCRL( true );       // default setting is "true" for SSLClient
-
-            // Let's load a client certificate (max: 1 per SSLClient instance).
-            client.setKeyMaterial( new KeyMaterial( "/path/to/client.pfx", "secret".toCharArray() ) );
-            SSLSocket s = (SSLSocket) client.createSocket( "www.cucbc.com", 443 );
+                SSLClient client = new SSLClient();
+                SSLSocket s = (SSLSocket) client.createSocket( "localhost", 7443 );
+                PrintWriter writer= new PrintWriter(s.getOutputStream());
+                InputStream reader= s.getInputStream();
+                writer.println("Hola");
         } catch (Exception exception) {
             
         }
