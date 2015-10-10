@@ -5,12 +5,44 @@
  */
 package clientetcp;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.UnknownHostException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocketFactory;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Map;
+import java.util.Properties;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
+import org.apache.commons.ssl.HostnameVerifier;
+import org.apache.commons.ssl.KeyMaterial;
+import org.apache.commons.ssl.SSL;
+import org.apache.commons.ssl.SSLClient;
+import org.apache.commons.ssl.SSLWrapperFactory;
+import org.apache.commons.ssl.TomcatServerXML;
+import org.apache.commons.ssl.TrustChain;
+import org.apache.commons.ssl.TrustMaterial;
 
 /**
  *
@@ -18,42 +50,26 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class ClienteTCP {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-         try
-        {
-        //Mo 1 client socket den server voi so cong va dia chi xac dinh
-        SSLSocketFactory factory=(SSLSocketFactory) SSLSocketFactory.getDefault();
-        SSLSocket sslsocket=(SSLSocket) factory.createSocket("127.0.0.1",1234);
+        
+         try {
+            SSLClient client = new SSLClient();
+            // Let's trust usual "cacerts" that come with Java.  Plus, let's also trust a self-signed cert
+            // we know of.  We have some additional certs to trust inside a java keystore file.
+            client.addTrustMaterial( TrustMaterial.DEFAULT );
+            client.addTrustMaterial( new TrustMaterial( "/path/to/self-signed.pem" ) );
+            client.addTrustMaterial( new KeyMaterial( "/path/to/keystore.jks", "changeit".toCharArray() ) );
 
-        //Tao luong nhan va gui du lieu len server
-        DataOutputStream os=new DataOutputStream(sslsocket.getOutputStream());
-        DataInputStream is=new DataInputStream(sslsocket.getInputStream());
+            // To be different, let's allow for expired certificates (not recommended).
+            client.setCheckHostname( true );  // default setting is "true" for SSLClient
+            client.setCheckExpiry( false );   // default setting is "true" for SSLClient
+            client.setCheckCRL( true );       // default setting is "true" for SSLClient
 
-        //Gui du lieu len server
-        String str="helloworld";
-        os.writeBytes(str);
-
-        //Nhan du lieu da qua xu li tu server ve
-        String responseStr;
-        if((responseStr=is.readUTF())!=null)
-        {
-            System.out.println(responseStr);
-        }
-
-        os.close();
-        is.close();
-        sslsocket.close();
-        }
-        catch(UnknownHostException e)
-        {
-             System.out.println(e.getMessage());
-        }
-        catch(IOException e)
-        {
-            System.out.println(e.getMessage());
+            // Let's load a client certificate (max: 1 per SSLClient instance).
+            client.setKeyMaterial( new KeyMaterial( "/path/to/client.pfx", "secret".toCharArray() ) );
+            SSLSocket s = (SSLSocket) client.createSocket( "www.cucbc.com", 443 );
+        } catch (Exception exception) {
+            
         }
 
     }

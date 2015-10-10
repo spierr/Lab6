@@ -5,46 +5,64 @@
  */
 package servidor;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Map;
+import java.util.Properties;
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
+import org.apache.commons.ssl.HostnameVerifier;
+import org.apache.commons.ssl.KeyMaterial;
+import org.apache.commons.ssl.SSL;
+import org.apache.commons.ssl.SSLServer;
+import org.apache.commons.ssl.SSLWrapperFactory;
+import org.apache.commons.ssl.TomcatServerXML;
+import org.apache.commons.ssl.TrustChain;
+import org.apache.commons.ssl.TrustMaterial;
 
 /**
  *
  * @author DELL
  */
-public class Servidor {
+public class Servidor  {
+     
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-       try{
-        //Creaet a SSLServersocket
-        SSLServerSocketFactory factory=(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        SSLServerSocket sslserversocket=(SSLServerSocket) factory.createServerSocket(1234);
-        //Tạo 1 đối tượng Socket từ serversocket để lắng nghe và chấp nhận kết nối từ client
-        SSLSocket sslsocket=(SSLSocket) sslserversocket.accept();
-        //Tao cac luong de nhan va gui du lieu cua client
-        DataInputStream is=new DataInputStream(sslsocket.getInputStream());
-        PrintStream os=new PrintStream(sslsocket.getOutputStream());
-        while(true)  //khi dang ket noi voi client
-        {
-            //Doc du lieu den
-            String input=is.readUTF();
-            String ketqua=input.toUpperCase();
-            //Du lieu tra ve
-            os.println(ketqua);
-        }
-        }
-        catch(IOException e)
-        {
-           System.out.print(e);
-        }
+     public  static  void      main(String[] arstring) {
+         try {
+            SSLServer server = new SSLServer();
+            // Server needs some key material.  We'll use an OpenSSL/PKCS8 style key (possibly encrypted).
+            String certificateChain = "/path/to/this/server.crt";
+            String privateKey = "/path/to/this/server.key";
+            char[] password = "changeit".toCharArray();
+            KeyMaterial km = new KeyMaterial( certificateChain, privateKey, password ); 
 
+            server.setKeyMaterial( km );
+
+            // These settings have to do with how we'll treat client certificates that are presented
+            // to us.  If the client doesn't present any client certificate, then these are ignored.
+            server.setCheckHostname( false ); // default setting is "false" for SSLServer
+            server.setCheckExpiry( true );    // default setting is "true" for SSLServer
+            server.setCheckCRL( true );       // default setting is "true" for SSLServer
+
+            // This server trusts all client certificates presented (usually people won't present
+            // client certs, but if they do, we'll give them a socket at the very least).
+            server.addTrustMaterial( TrustMaterial.TRUST_ALL );
+            SSLServerSocket ss = (SSLServerSocket) server.createServerSocket( 7443 );
+            SSLSocket socket = (SSLSocket) ss.accept();
+         } catch (Exception e) {
+         }
+ 
+         
     }
-    
+
 }
